@@ -47,8 +47,8 @@ public class Sobel_Operator extends Abstract_ImagePlugin {
                     }
                 }
 
-                newRowValue = normalize(newRowValue);
-                newColValue = normalize(newColValue);
+                newRowValue = normalize(newRowValue + 127);
+                newColValue = normalize(newColValue + 127);
 
 
                 // set new pixel
@@ -57,15 +57,15 @@ public class Sobel_Operator extends Abstract_ImagePlugin {
             }
         }
 
-//        ImagePlus newRowImage = NewImage.createByteImage("Row image", wrapper.getImageWidth(), wrapper.getImageHeight(), 1, NewImage.FILL_BLACK);
-//        newRowImage.getProcessor().setPixels(rowImagePixels);
-//        newRowImage.show();
-//        newRowImage.updateAndDraw();
-//
-//        ImagePlus newColImage = NewImage.createByteImage("Col image", wrapper.getImageWidth(), wrapper.getImageHeight(), 1, NewImage.FILL_BLACK);
-//        newColImage.getProcessor().setPixels(colImagePixels);
-//        newColImage.show();
-//        newColImage.updateAndDraw();
+        ImagePlus newRowImage = NewImage.createByteImage("Row image", wrapper.getImageWidth(), wrapper.getImageHeight(), 1, NewImage.FILL_BLACK);
+        newRowImage.getProcessor().setPixels(rowImagePixels);
+        newRowImage.show();
+        newRowImage.updateAndDraw();
+
+        ImagePlus newColImage = NewImage.createByteImage("Col image", wrapper.getImageWidth(), wrapper.getImageHeight(), 1, NewImage.FILL_BLACK);
+        newColImage.getProcessor().setPixels(colImagePixels);
+        newColImage.show();
+        newColImage.updateAndDraw();
 
         createCombinedImage(rowImagePixels, colImagePixels, wrapper.getImageWidth(), wrapper.getImageHeight());
         IJ.log("Image created.");
