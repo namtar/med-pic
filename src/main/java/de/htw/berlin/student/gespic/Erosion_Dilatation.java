@@ -1,7 +1,6 @@
 package de.htw.berlin.student.gespic;
 
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.NewImage;
 
