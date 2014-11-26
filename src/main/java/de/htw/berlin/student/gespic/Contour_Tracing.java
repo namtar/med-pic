@@ -3,8 +3,11 @@ package de.htw.berlin.student.gespic;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.io.Opener;
 
+import javax.swing.text.View;
 import java.awt.*;
+import java.io.InputStream;
 import java.util.Vector;
 
 /**
@@ -14,161 +17,191 @@ import java.util.Vector;
  */
 public class Contour_Tracing extends Abstract_ImagePlugin {
 
-	private Vector polyvec;
+    private Vector polyvec;
 
-	private final static Integer BACKGROUND = 255;
-	private final static Integer FOREGROUND = 0;
+    private final static Integer BACKGROUND = 255;
+    private final static Integer FOREGROUND = 0;
 
-	@Override
-	public void runLogic() {
+    @Override
+    public void runLogic() {
 
-		ByteArrayTwoDimensionWrapper wrapper = getTwoDimensionWrapper();
-		polyvec = new Vector();
+        ByteArrayTwoDimensionWrapper wrapper = getTwoDimensionWrapper();
+        polyvec = new Vector();
 
-		// find start pixel
-		for (int i = 0; i < wrapper.getImageHeight(); i++) {
-			for (int j = 0; j < wrapper.getImageWidth(); j++) {
-				// if pixel is not an background pixel
-				if (getTwoDimensionWrapper().getEndianPixel(j, i) != 0 && !checkcontains(j, i)) {
-					// start tracing
-				}
-			}
-		}
+        // blank out all target pixels....
+        for (int i = 0; i < wrapper.getImageArray().length; i++) {
+            wrapper.setPixel(i, BACKGROUND.byteValue());
+        }
 
-	}
+        // find start pixel
+        for (int i = 0; i < wrapper.getImageHeight(); i++) {
+            for (int j = 0; j < wrapper.getImageWidth(); j++) {
+                // if pixel is not an background pixel
+                // set every target image pixel to background. The traceContour method will set the foreground contour pixels.
+//                wrapper.setPixel(j, i, BACKGROUND.byteValue());
+                if (getTwoDimensionWrapper().getOriginalEndianPixel(j, i) != BACKGROUND && !checkcontains(j, i)) {
+                    // start tracing
+                    System.out.println("Found Contourpixel at: x=" + j + ", and y=" + i);
+                    traceContour(wrapper, j, i);
+                }
+            }
+        }
 
-	private void traceContour(ByteArrayTwoDimensionWrapper wrapper, int x, int y) {
+        updateDrawAndShow();
+    }
 
-		int rightCount = 0; // if rightCount + 1 == 4
-		boolean done = false;
-		ViewDirection actualViewDirection = ViewDirection.EAST;
-		Polygon currentPolygon = new Polygon();
-		Tuple<Integer, Integer> actualPixelPosition = new Tuple<Integer, Integer>(Integer.valueOf(x), Integer.valueOf(y));
-		do {
-			if (checkcontains(actualPixelPosition.getX(), actualPixelPosition.getY())) {
-				// we reached our startpoint.
-				done = true;
-			} else {
-				int pixel = wrapper.getEndianPixel(actualPixelPosition.getX(), actualPixelPosition.getY());
-				if (pixel == BACKGROUND) {
-					actualPixelPosition = actualViewDirection.coordinateDirectionTranscoder(Turn.RIGHT, actualPixelPosition.getX(), actualPixelPosition.getY());
-				} else {
+    private void traceContour(ByteArrayTwoDimensionWrapper wrapper, int x, int y) {
 
-				}
-			}
+        int rightCount = 0; // if rightCount + 1 == 4
+        ViewDirection actualViewDirection = ViewDirection.EAST;
+        Polygon currentPolygon = new Polygon();
+        Tuple<Integer, Integer> actualPixelPosition = new Tuple<Integer, Integer>(Integer.valueOf(x), Integer.valueOf(y));
+        do {
+            int pixel = wrapper.getOriginalEndianPixel(actualPixelPosition.getX(), actualPixelPosition.getY());
+            if (pixel == BACKGROUND) {
+                Turn toTurn = Turn.RIGHT;
+                if (rightCount + 1 == 4) {
+                    toTurn = Turn.LEFT;
+                }
+                wrapper.setPixel(actualPixelPosition.getX(), actualPixelPosition.getY(), BACKGROUND.byteValue());
+                actualPixelPosition = actualViewDirection.coordinateDirectionTranscoder(toTurn, actualPixelPosition.getX(), actualPixelPosition.getY());
+                actualViewDirection = calculateViewDirectionByTurn(actualViewDirection, toTurn);
+                rightCount++;
+            } else {
+                rightCount = 0;
+                currentPolygon.addPoint(actualPixelPosition.getX(), actualPixelPosition.getY());
+                wrapper.setPixel(actualPixelPosition.getX(), actualPixelPosition.getY(), FOREGROUND.byteValue());
+                actualPixelPosition = actualViewDirection.coordinateDirectionTranscoder(Turn.LEFT, actualPixelPosition.getX(), actualPixelPosition.getY());
+                actualViewDirection = calculateViewDirectionByTurn(actualViewDirection, Turn.LEFT);
+            }
 
-		} while (!done);
+        } while (actualPixelPosition.getX().intValue() != x || actualPixelPosition.getY().intValue() != y);
 
-		polyvec.add(currentPolygon);
-	}
+        polyvec.add(currentPolygon);
+    }
 
-	/**
-	 * Checks, if a point is inside one of the Objects.
-	 *
-	 * @param x The x image coordinate of the point to be examined.
-	 * @param y the y image coordinate of the point to be examined.
-	 * @return inside True, if the point lies inside an object, false otherwise.
-	 */
-	public boolean checkcontains(int x, int y) //checks all Polygons
-	{
-		for (int i = 0; i < this.polyvec.size(); i++) {
-			Polygon poly = (Polygon) this.polyvec.elementAt(i);
-			if (poly.contains(x, y)) {
-				return true;
-			}
+    private ViewDirection calculateViewDirectionByTurn(ViewDirection viewDirection, Turn turn) {
+        ViewDirection newViewDirection = null;
+        if (turn == Turn.LEFT) {
+            newViewDirection = ViewDirection.valueOf(viewDirection.getLeft().toUpperCase());
+        } else {
+            newViewDirection = ViewDirection.valueOf(viewDirection.getRight().toUpperCase());
+        }
+        return newViewDirection;
+    }
 
-			for (int j = 0; j < poly.npoints; j++) {
-				if (x == poly.xpoints[j] && y == poly.ypoints[j]) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+    /**
+     * Checks, if a point is inside one of the Objects.
+     *
+     * @param x The x image coordinate of the point to be examined.
+     * @param y the y image coordinate of the point to be examined.
+     * @return inside True, if the point lies inside an object, false otherwise.
+     */
+    public boolean checkcontains(int x, int y) //checks all Polygons
+    {
+        for (int i = 0; i < this.polyvec.size(); i++) {
+            Polygon poly = (Polygon) this.polyvec.elementAt(i);
+            if (poly.contains(x, y)) {
+                return true;
+            }
 
-	private enum Turn {
-		LEFT,
-		RIGHT;
-	}
+            for (int j = 0; j < poly.npoints; j++) {
+                if (x == poly.xpoints[j] && y == poly.ypoints[j]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-	private enum ViewDirection {
-		NORTH("west", "east"),
-		EAST("north", "south"),
-		SOUTH("east", "west"),
-		WEST("south", "north");
+    private enum Turn {
+        LEFT,
+        RIGHT;
+    }
 
-		private String left;
-		private String right;
+    private enum ViewDirection {
+        NORTH("west", "east"),
+        EAST("north", "south"),
+        SOUTH("east", "west"),
+        WEST("south", "north");
 
-		private ViewDirection(String left, String right) {
-			this.left = left;
-			this.right = right;
-		}
+        private String left;
+        private String right;
 
-		public String getLeft() {
-			return left;
-		}
+        private ViewDirection(String left, String right) {
+            this.left = left;
+            this.right = right;
+        }
 
-		public String getRight() {
-			return right;
-		}
+        public String getLeft() {
+            return left;
+        }
 
-		private Tuple<Integer, Integer> coordinateDirectionTranscoder(Turn turn, int actualX, int actualY) {
+        public String getRight() {
+            return right;
+        }
 
-			Integer newX = null;
-			Integer newY = null;
+        private Tuple<Integer, Integer> coordinateDirectionTranscoder(Turn turn, int actualX, int actualY) {
 
-			switch (this) {
-				case NORTH:
-					newY = actualY;
-					if (turn == Turn.LEFT) {
-						newX = actualX - 1;
-					} else {
-						newX = actualX + 1;
-					}
+            Integer newX = null;
+            Integer newY = null;
 
-					break;
-				case EAST:
-					newX = actualX;
-					if (turn == Turn.LEFT) {
-						newY = actualY - 1;
-					} else {
-						newY = actualY + 1;
-					}
-					break;
-				case SOUTH:
-					newY = actualY;
-					if (turn == Turn.LEFT) {
-						newX = actualX + 1;
-					} else {
-						newX = actualX - 1;
-					}
-					break;
-				case WEST:
-					newX = actualX;
-					if (turn == Turn.LEFT) {
-						newY = actualY + 1;
-					} else {
-						newY = actualY - 1;
-					}
-					break;
-				default:
-					throw new IllegalStateException("Given Value not supported: " + viewDirection);
-			}
+            switch (this) {
+                case NORTH:
+                    newY = actualY;
+                    if (turn == Turn.LEFT) {
+                        newX = actualX - 1;
+                    } else {
+                        newX = actualX + 1;
+                    }
 
-			return new Tuple<Integer, Integer>(newX, newY);
-		}
-	}
+                    break;
+                case EAST:
+                    newX = actualX;
+                    if (turn == Turn.LEFT) {
+                        newY = actualY - 1;
+                    } else {
+                        newY = actualY + 1;
+                    }
+                    break;
+                case SOUTH:
+                    newY = actualY;
+                    if (turn == Turn.LEFT) {
+                        newX = actualX + 1;
+                    } else {
+                        newX = actualX - 1;
+                    }
+                    break;
+                case WEST:
+                    newX = actualX;
+                    if (turn == Turn.LEFT) {
+                        newY = actualY + 1;
+                    } else {
+                        newY = actualY - 1;
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException("Given Value not supported: " + this);
+            }
 
-	public static void main(String[] args) {
+            return new Tuple<Integer, Integer>(newX, newY);
+        }
+    }
 
-		new ImageJ();
+    public static void main(String[] args) {
 
-		//		https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixels.java
-		// open the Clown sample
-		ImagePlus image = IJ.openImage("/Users/matthias.drummer/Documents/studium/medBildverarbeitung/Testbilder-UE/Bin-DAPI.tif");
-		image.show();
+        new ImageJ();
 
-		IJ.runPlugIn(Contour_Tracing.class.getName(), "");
-	}
+        //		https://github.com/imagej/minimal-ij1-plugin/blob/master/src/main/java/Process_Pixels.java
+        InputStream is = Contour_Tracing.class.getClassLoader().getResourceAsStream("pics/Bin-DAPI.tif");
+        // @See: http://imagej.net/pipermail/imagej-devel/2013-January/001374.html
+        if (is != null) {
+            Opener opener = new Opener();
+            ImagePlus image = opener.openTiff(is, "Bin-DAPI.tif");
+            image.show();
+        }
+
+
+        IJ.runPlugIn(Contour_Tracing.class.getName(), "");
+    }
 }
