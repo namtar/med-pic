@@ -70,15 +70,15 @@ public class Rotate_Image extends Abstract_ImagePlugin {
 				//					outputPixels[wrapper.transformCoordinate(xRot, yRot)] = (byte) pixel;
 				//				}
 
-				int xRot = (int) (Math.cos(rotationAngle) / (j - middleX) + Math.sin(rotationAngle) / (i - middleY));
-				int yRot = (int) (Math.sin(rotationAngle) * (-1) / (j - middleX) + Math.cos(rotationAngle) / (i - middleY));
+				int xRot = (int) (Math.cos(rotationAngle) * (j - middleX) + Math.sin(rotationAngle) * (i - middleY));
+				int yRot = (int) (Math.sin(rotationAngle) * (-1) * (j - middleX) + Math.cos(rotationAngle) * (i - middleY));
 				xRot += middleX;
 				yRot += middleY;
 
 				if (xRot < 0 || xRot > wrapper.getImageWidth() - 1 || yRot < 0 || yRot > wrapper.getImageHeight() - 1) {
 					Logger.getLogger(getClass().getName()).info("Cordinate not processed: (x,y) " + xRot + ", " + yRot);
 				} else {
-					int pixel = wrapper.getEndianPixel(yRot, xRot);
+					int pixel = wrapper.getEndianPixel(xRot, yRot);
 					outputPixels[wrapper.transformCoordinate(j, i)] = (byte) pixel;
 				}
 			}
