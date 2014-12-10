@@ -37,39 +37,6 @@ public class Rotate_Image extends Abstract_ImagePlugin {
 		for (int i = 0; i < wrapper.getImageHeight(); i++) {
 			for (int j = 0; j < wrapper.getImageWidth(); j++) {
 
-				//				int polarX = middleX - j;
-				//				int polarY = middleY - i;
-				//				double theta = Math.atan2(polarY, polarX);
-				//				double length = Math.sqrt(polarX * polarX + polarY * polarY);
-				//
-				//				// rotate
-				//				theta += rotationAngle;
-				//
-				//				// back to cartesian coordinates
-				//				int newX = (int) (length * Math.cos(theta));
-				//				int newY = (int) (length * Math.sin(theta));
-				//				newX += middleX;
-				//				newY += middleY;
-				//
-				//				if (newX < 0 || newX > wrapper.getImageWidth() - 1 || newY < 0 || newY > wrapper.getImageHeight() - 1) {
-				//					Logger.getLogger(getClass().getName()).info("Cordinate not processed: (x,y) " + newX + ", " + newY);
-				//				} else {
-				//					int pixel = wrapper.getEndianPixel(j, i);
-				//					outputPixels[wrapper.transformCoordinate(newX, newY)] = (byte) pixel;
-				//				}
-
-				//				int xRot = (int) (Math.cos(-rotationAngle) * (j - middleX) + Math.sin(-rotationAngle) * (i - middleY));
-				//				int yRot = (int) (Math.sin(-rotationAngle) * (-1) * (j - middleX) + Math.cos(-rotationAngle) * (i - middleY));
-				//				xRot += middleX;
-				//				yRot += middleY;
-				//
-				//				if (xRot < 0 || xRot > wrapper.getImageWidth() - 1 || yRot < 0 || yRot > wrapper.getImageHeight() - 1) {
-				//					Logger.getLogger(getClass().getName()).info("Cordinate not processed: (x,y) " + xRot + ", " + yRot);
-				//				} else {
-				//					int pixel = wrapper.getEndianPixel(j, i);
-				//					outputPixels[wrapper.transformCoordinate(xRot, yRot)] = (byte) pixel;
-				//				}
-
 				int xRot = (int) (Math.cos(rotationAngle) * (j - middleX) + Math.sin(rotationAngle) * (i - middleY));
 				int yRot = (int) (Math.sin(rotationAngle) * (-1) * (j - middleX) + Math.cos(rotationAngle) * (i - middleY));
 				xRot += middleX;

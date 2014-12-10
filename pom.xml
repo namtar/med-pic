@@ -10,29 +10,6 @@
     <name>Medizinische Bildverarbeitung</name>
     <inceptionYear>2014</inceptionYear>
 
-
-<!--
-    <scm>
-        <url>https://bitbucket.org/tbDev/affpci.git</url>
-        <connection>scm:git:https://bitbucket.org/tbDev/affpci.git</connection>
-        <developerConnection>scm:git:https://bitbucket.org/tbDev/affpci.git</developerConnection>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>closed-maven-repository.tb-technology.com</id>
-            <name>Closed Releases</name>
-            <url>http://repository.tb-technology.com:8081/maven/content/repositories/tb-closed-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>tb-closed-snapshots</id>
-            <name>Internal Snapshots</name>
-            <url>http://repository.tb-technology.com:8081/maven/content/repositories/tb-closed-snapshots/</url>
-            <uniqueVersion>false</uniqueVersion>
-        </snapshotRepository>
-    </distributionManagement>
--->
-
     <properties>
         <jar.name>Gray_Image</jar.name>
         <!-- Java-Version -->
